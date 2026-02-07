@@ -1,93 +1,76 @@
 import requests
 import allure
-from utils.helpers import (
-    register_user,
-    login_user,
-    get_ingredients,
-    BASE_URL
-)
+from utils.urls import BASE_URL
 
 
-@allure.title("Создание заказа с авторизацией")
-def test_create_order_with_auth():
-    user_data, _ = register_user()
-    login_response = login_user(user_data["email"], user_data["password"])
-    token = login_response.json()["accessToken"]
+@allure.suite("Заказы")
+class TestOrders:
 
-    ingredients = get_ingredients()
-    ingredient_ids = [ingredients[0]["_id"], ingredients[1]["_id"]]
+    @allure.title("Создание заказа с авторизацией")
+    def test_create_order_with_auth(self, auth_token, ingredient_ids):
+        headers = {
+            "Authorization": auth_token
+        }
+        payload = {
+            "ingredients": ingredient_ids
+        }
 
-    headers = {
-        "Authorization": token
-    }
+        with allure.step("Создание заказа авторизованным пользователем"):
+            response = requests.post(
+                f"{BASE_URL}/api/orders",
+                json=payload,
+                headers=headers
+            )
 
-    payload = {
-        "ingredients": ingredient_ids
-    }
+        body = response.json()
 
-    response = requests.post(
-        f"{BASE_URL}/api/orders",
-        json=payload,
-        headers=headers
-    )
+        assert response.status_code == 200
+        assert body["order"]["ingredients"]
+        assert body["order"]["number"] > 0
 
-    assert response.status_code == 200
-    assert response.json()["success"] is True
+    @allure.title("Создание заказа без авторизации")
+    def test_create_order_without_auth(self, ingredient_ids):
+        payload = {
+            "ingredients": ingredient_ids
+        }
 
+        with allure.step("Создание заказа без авторизации"):
+            response = requests.post(
+                f"{BASE_URL}/api/orders",
+                json=payload
+            )
 
-@allure.title("Создание заказа без авторизации")
-def test_create_order_without_auth():
-    ingredients = get_ingredients()
-    ingredient_ids = [ingredients[0]["_id"]]
+        body = response.json()
 
-    payload = {
-        "ingredients": ingredient_ids
-    }
+        assert response.status_code == 200
+        assert body["order"]["number"] > 0
 
-    response = requests.post(f"{BASE_URL}/api/orders", json=payload)
+    @allure.title("Создание заказа без ингредиентов")
+    def test_create_order_without_ingredients(self):
+        with allure.step("Создание заказа без ингредиентов"):
+            response = requests.post(
+                f"{BASE_URL}/api/orders",
+                json={}
+            )
 
-    assert response.status_code == 200
-    assert response.json()["success"] is True
+        body = response.json()
 
+        assert response.status_code == 400
+        assert body["message"] == "Ingredient ids must be provided"
 
+    @allure.title("Создание заказа с некорректным id ингредиента")
+    def test_create_order_with_invalid_ingredient_hash(self):
+        payload = {
+            "ingredients": ["invalid_hash"]
+        }
 
-@allure.title("Создание заказа с ингредиентами")
-def test_create_order_with_ingredients():
-    ingredients = get_ingredients()
-    ingredient_ids = [ingredients[0]["_id"]]
+        with allure.step("Создание заказа с неверным ингредиентом"):
+            response = requests.post(
+                f"{BASE_URL}/api/orders",
+                json=payload
+            )
 
-    response = requests.post(
-        f"{BASE_URL}/api/orders",
-        json={"ingredients": ingredient_ids}
-    )
+        body = response.json()
 
-    # API допускает заказ без авторизации, но с ингредиентами
-    assert response.status_code == 200
-    assert response.json()["success"] is True
-
-
-@allure.title("Создание заказа без ингредиентов")
-def test_create_order_without_ingredients():
-    response = requests.post(
-        f"{BASE_URL}/api/orders",
-        json={}
-    )
-
-    assert response.status_code == 400
-    assert response.json()["success"] is False
-
-
-@allure.title("Создание заказа с неверным хешем ингредиентов")
-def test_create_order_with_invalid_ingredient_hash():
-    payload = {
-        "ingredients": ["invalid_hash"]
-    }
-
-    response = requests.post(
-        f"{BASE_URL}/api/orders",
-        json=payload
-    )
-
-    assert response.status_code == 400
-    assert response.json()["success"] is False
-
+        assert response.status_code == 400
+        assert body["message"] == "One or more ids provided are incorrect"

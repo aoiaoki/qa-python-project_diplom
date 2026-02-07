@@ -1,8 +1,7 @@
 import random
 import string
 import requests
-
-BASE_URL = "https://stellarburgers.education-services.ru"
+from utils.urls import BASE_URL
 
 
 def random_email():
