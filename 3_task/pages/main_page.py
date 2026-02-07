@@ -1,14 +1,18 @@
+import allure
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from pages.base_page import BasePage
 
 
 class MainPage(BasePage):
+
     CONSTRUCTOR_TAB = (By.XPATH, "//p[text()='Конструктор']")
     FEED_TAB = (By.XPATH, "//a[contains(@href,'/feed')]")
 
-    SAUCES_TAB = (By.XPATH, "//span[text()='Соусы']")
+    CONSTRUCTOR_HEADER = (By.XPATH, "//h1[text()='Соберите бургер']")
+    FEED_HEADER = (By.XPATH, "//h1[text()='Лента заказов']")
 
+    SAUCES_TAB = (By.XPATH, "//span[text()='Соусы']")
     INGREDIENT_NAME = "Соус Spicy-X"
     INGREDIENT = (By.XPATH, f"//p[text()='{INGREDIENT_NAME}']")
 
@@ -28,30 +32,48 @@ class MainPage(BasePage):
         "//button[contains(@class,'Modal_modal__close')]"
     )
 
+    @allure.step("Открыть конструктор")
     def open_constructor(self):
         self.click(self.CONSTRUCTOR_TAB)
 
+    @allure.step("Открыть ленту заказов")
     def open_feed(self):
         self.click(self.FEED_TAB)
 
-    def scroll_to_sauces(self):
-        tab = self.wait.until(EC.element_to_be_clickable(self.SAUCES_TAB))
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block: 'center'});", tab
-        )
-        tab.click()
+    @allure.step("Проверить, что конструктор открыт")
+    def is_constructor_opened(self) -> bool:
+        return len(self.driver.find_elements(*self.CONSTRUCTOR_HEADER)) > 0
 
+    @allure.step("Проверить, что лента заказов открыта")
+    def is_feed_opened(self) -> bool:
+        return len(self.driver.find_elements(*self.FEED_HEADER)) > 0
+
+    @allure.step("Открыть модальное окно ингредиента")
     def open_ingredient_modal(self):
-        ingredient = self.wait.until(
+        self.wait.until(
             EC.element_to_be_clickable(self.INGREDIENT)
-        )
-        ingredient.click()
-        self.wait.until(EC.visibility_of_element_located(self.MODAL))
+        ).click()
 
+        self.wait.until(
+            EC.visibility_of_element_located(self.MODAL)
+        )
+
+    @allure.step("Проверить, что модальное окно ингредиента открыто")
+    def is_ingredient_modal_opened(self) -> bool:
+        elements = self.driver.find_elements(*self.MODAL)
+        return len(elements) > 0 and elements[0].is_displayed()
+
+    @allure.step("Закрыть модальное окно ингредиента")
     def close_ingredient_modal(self):
         self.click(self.MODAL_CLOSE_BUTTON)
-        self.wait.until(EC.invisibility_of_element_located(self.MODAL))
 
+    @allure.step("Дождаться закрытия модального окна")
+    def wait_modal_closed(self):
+        self.wait.until(
+            EC.invisibility_of_element_located(self.MODAL)
+        )
+
+    @allure.step("Добавить ингредиент в конструктор")
     def add_ingredient_to_constructor(self):
         ingredient = self.wait.until(
             EC.presence_of_element_located(self.INGREDIENT)
@@ -75,8 +97,6 @@ class MainPage(BasePage):
             target
         )
 
+    @allure.step("Проверить, что в конструкторе есть ингредиенты")
     def constructor_has_items(self) -> bool:
         return len(self.driver.find_elements(*self.CONSTRUCTOR_ITEMS)) > 0
-
-    def wait_modal_closed(self):
-        self.wait.until(EC.invisibility_of_element_located(self.MODAL))
