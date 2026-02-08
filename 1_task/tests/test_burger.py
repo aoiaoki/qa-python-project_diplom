@@ -6,11 +6,22 @@ from praktikum.ingredient_types import (
     INGREDIENT_TYPE_FILLING
 )
 
+from tests.data.test_data import (
+    BLACK_BUN_NAME,
+    BLACK_BUN_PRICE,
+    HOT_SAUCE_NAME,
+    HOT_SAUCE_PRICE,
+    CUTLET_NAME,
+    CUTLET_PRICE,
+    EXPECTED_RECEIPT_SINGLE_SAUCE
+)
+
 
 class TestBurger:
+
     def test_set_buns(self):
         burger = Burger()
-        bun = Bun("black bun", 100)
+        bun = Bun(BLACK_BUN_NAME, BLACK_BUN_PRICE)
 
         burger.set_buns(bun)
 
@@ -18,7 +29,11 @@ class TestBurger:
 
     def test_add_ingredient(self):
         burger = Burger()
-        ingredient = Ingredient(INGREDIENT_TYPE_SAUCE, "hot sauce", 100)
+        ingredient = Ingredient(
+            INGREDIENT_TYPE_SAUCE,
+            HOT_SAUCE_NAME,
+            HOT_SAUCE_PRICE
+        )
 
         burger.add_ingredient(ingredient)
 
@@ -26,7 +41,11 @@ class TestBurger:
 
     def test_remove_ingredient(self):
         burger = Burger()
-        ingredient = Ingredient(INGREDIENT_TYPE_FILLING, "cutlet", 200)
+        ingredient = Ingredient(
+            INGREDIENT_TYPE_FILLING,
+            CUTLET_NAME,
+            CUTLET_PRICE
+        )
 
         burger.add_ingredient(ingredient)
         burger.remove_ingredient(0)
@@ -35,8 +54,17 @@ class TestBurger:
 
     def test_move_ingredient(self):
         burger = Burger()
-        ingredient1 = Ingredient(INGREDIENT_TYPE_SAUCE, "hot sauce", 100)
-        ingredient2 = Ingredient(INGREDIENT_TYPE_FILLING, "cutlet", 200)
+
+        ingredient1 = Ingredient(
+            INGREDIENT_TYPE_SAUCE,
+            HOT_SAUCE_NAME,
+            HOT_SAUCE_PRICE
+        )
+        ingredient2 = Ingredient(
+            INGREDIENT_TYPE_FILLING,
+            CUTLET_NAME,
+            CUTLET_PRICE
+        )
 
         burger.add_ingredient(ingredient1)
         burger.add_ingredient(ingredient2)
@@ -46,28 +74,36 @@ class TestBurger:
 
     def test_get_price(self):
         burger = Burger()
-        bun = Bun("black bun", 100)
+        bun = Bun(BLACK_BUN_NAME, BLACK_BUN_PRICE)
 
         burger.set_buns(bun)
-        burger.add_ingredient(Ingredient(INGREDIENT_TYPE_SAUCE, "hot sauce", 50))
-        burger.add_ingredient(Ingredient(INGREDIENT_TYPE_FILLING, "cutlet", 150))
+        burger.add_ingredient(
+            Ingredient(
+                INGREDIENT_TYPE_SAUCE,
+                HOT_SAUCE_NAME,
+                HOT_SAUCE_PRICE
+            )
+        )
+        burger.add_ingredient(
+            Ingredient(
+                INGREDIENT_TYPE_FILLING,
+                CUTLET_NAME,
+                CUTLET_PRICE
+            )
+        )
 
-        assert burger.get_price() == 400
+        assert burger.get_price() == 450
 
     def test_get_receipt(self):
         burger = Burger()
-        bun = Bun("black bun", 100)
-        ingredient = Ingredient(INGREDIENT_TYPE_SAUCE, "hot sauce", 50)
+        bun = Bun(BLACK_BUN_NAME, BLACK_BUN_PRICE)
+        ingredient = Ingredient(
+            INGREDIENT_TYPE_SAUCE,
+            HOT_SAUCE_NAME,
+            HOT_SAUCE_PRICE
+        )
 
         burger.set_buns(bun)
         burger.add_ingredient(ingredient)
 
-        expected_receipt = (
-            "(==== black bun ====)\n"
-            "= sauce hot sauce =\n"
-            "(==== black bun ====)\n"
-            "\n"
-            "Price: 250"
-        )
-
-        assert burger.get_receipt() == expected_receipt
+        assert burger.get_receipt() == EXPECTED_RECEIPT_SINGLE_SAUCE
